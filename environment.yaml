@@ -1,0 +1,27 @@
+channels:
+  - pytorch
+  - conda-forge
+  - nvidia
+
+dependencies:
+  - python=3.10
+  - pip
+  - pillow
+  - tqdm
+  - ipython
+  - matplotlib
+  - numba
+  - numexpr>=2.8.4
+  - pytorch
+  - pandas
+  - pytorch-cuda=12.1
+  - scikit-learn
+  - pandas
+  - pytables
+  - jupyter
+  - pip:
+    - faiss-cpu
+    - qtpy
+    - pyqt6
+    - pyqt6.sip
+    - pyqtgraph
