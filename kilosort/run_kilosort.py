@@ -87,8 +87,20 @@ def run_kilosort(settings, probe=None, probe_name=None, filename=None,
 
     Returns
     -------
-    ops, st, clu, tF, Wall, similar_templates, is_ref, est_contam_rate
+    ops : dict
+    st : 1d vector of spike times for all clusters
+    clu : np.ndarray
+        1D vector of cluster ids indicating which spike came from which cluster,
+        same shape as `st`
+    tF : Principle components?
+    clu: cluster index
+    Wall: from cluster_spikes?
+
+
+    ops, st, clu, tF, Wall, similar_templates, is_ref, est_contam_rate, kept_spikes
         Description TODO
+
+
 
     """
 
