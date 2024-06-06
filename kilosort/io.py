@@ -781,7 +781,7 @@ def spikeinterface_to_binary(recording, filepath, data_name='data.bin',
     c = recording.get_traces(start_frame=0, end_frame=1, segment_index=0).shape[1]
     logger.info(f'number of channels: {c}')
     s = recording.get_num_segments()
-    logger.info(f'numbef of segments: {s}')
+    logger.info(f'number of segments: {s}')
     fs = recording.get_sampling_frequency()
     logger.info(f'sampling rate: {fs}')
     dtype = recording.get_dtype()
@@ -797,7 +797,7 @@ def spikeinterface_to_binary(recording, filepath, data_name='data.bin',
             indices.append((i, j, k))
             i += chunksize
 
-    # Copy each chunk of data to memmory mapped binary file,
+    # Copy each chunk of data to memory mapped binary file,
     # use multithreading to speed it up.
     def copy_chunk(memmap, i, j, k):
         t = recording.get_traces(start_frame=i, end_frame=j, segment_index=k)

@@ -25,3 +25,4 @@ dependencies:
     - pyqt6
     - pyqt6.sip
     - pyqtgraph
+    - spikeinterface
