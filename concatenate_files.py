@@ -63,12 +63,12 @@ def get_subfolders(root: Path) -> list[Path]:
     return subfolders
 
 
-def get_chunk_indices(recording, chunksize: int, start_idx=0) -> list[tuple[int, int, int]]:  # (segment, start, end)
+def get_chunk_indices(recording, chunksize: int) -> list[tuple[int, int, int]]:  # (segment, start, end)
     # Determine start/end indices for each segment
     indices = []
     for k in range(recording.get_num_segments()):
         n = recording.get_num_samples(segment_index=k)
-        i = start_idx + k * chunksize
+        i = 0 + k * chunksize
         while i < n:
             j = i + chunksize if (i + chunksize) < n else n
             indices.append((i, j, k))
@@ -105,7 +105,6 @@ def get_recordings(root: Path) -> Iterator[IntanRecording]:
 
 
 def concatenate(root: Path):
-    subfolders = get_subfolders(root)
     binary_file = root / 'concatenated.bin'
     chunksize = 300000
     max_workers = min(32, (os.cpu_count() or 1) + 4)
@@ -121,21 +120,17 @@ def concatenate(root: Path):
         for r in recordings:
             csvfile.writerow([r.folder.parts[-1], r.n_samples])
 
-    return
-
     n_total = sum(n_samples)
     memmapped_output = np.memmap(str(binary_file), dtype=np.int16, mode='w+', shape=(n_total, n_channels.pop()))
     subfolder_start_idx = 0
 
     for r in (pbar0 := tqdm(recordings)):
         pbar0.set_postfix(dict(subfolder=r.folder.parts[-1]))
-        recording = read_intan(r.folder / 'info.rhd', stream_id='0')
-        indices = get_chunk_indices(r.recording, start_idx=subfolder_start_idx, chunksize=chunksize)
-        subfolder_start_idx += r.n_samples
+        indices = get_chunk_indices(r.recording, chunksize=chunksize)
 
         def copy_chunk(memmap, i, j, k):
-            t = recording.get_traces(start_frame=i, end_frame=j, segment_index=k)
-            memmap[i:j, :] = t
+            t = r.recording.get_traces(start_frame=i, end_frame=j, segment_index=k)
+            memmap[subfolder_start_idx + np.arange(i, j), :] = t
             memmap.flush()
             del t
 
@@ -145,9 +140,11 @@ def concatenate(root: Path):
         with ThreadPoolExecutor(max_workers=max_workers) as exe:
             _futures = [exe.submit(copy_chunk, memmapped_output, i, j, k) for i, j, k in indices]
             while exe._work_queue.qsize() > 0:  # noqa
-                time.sleep(10)
+                time.sleep(1)
                 pbar1.n = n_chunks - exe._work_queue.qsize()  # noqa
                 pbar1.refresh()
+
+        subfolder_start_idx += r.n_samples
 
     del memmapped_output
     write_probe_file(root / 'probe.prb')

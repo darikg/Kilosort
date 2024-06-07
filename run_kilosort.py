@@ -14,14 +14,14 @@ from probeinterface import generate_linear_probe, ProbeGroup, write_prb
 from spikeinterface.extractors import read_intan
 from tqdm import tqdm
 
-basicConfig(
-    level=logging.DEBUG,
-    format= '[%(asctime)s] %(levelname)s - %(message)s',
-    datefmt='%H:%M:%S',
-)
-
-logging.getLogger().setLevel(logging.DEBUG)
-logger = logging.getLogger(__name__)
+# basicConfig(
+#     level=logging.DEBUG,
+#     format= '[%(asctime)s] %(levelname)s - %(message)s',
+#     datefmt='%H:%M:%S',
+# )
+#
+# logging.getLogger().setLevel(logging.DEBUG)
+# logger = logging.getLogger(__name__)
 
 
 def parse_args() -> Path:

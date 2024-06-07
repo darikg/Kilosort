@@ -26,3 +26,4 @@ dependencies:
     - pyqt6.sip
     - pyqtgraph
     - spikeinterface
+    - mysql-connector-python
