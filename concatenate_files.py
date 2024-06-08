@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import csv
 import logging
 import os
@@ -90,18 +92,14 @@ class IntanRecording:
     def n_channels(self) -> int:
         return self.recording.get_traces(start_frame=0, end_frame=1, segment_index=0).shape[1]
 
-
-def get_recordings(root: Path) -> Iterator[IntanRecording]:
-    for subfolder in (pbar0 := tqdm(get_subfolders(root))):
-        info_file = subfolder / 'info.rhd'
-        if not info_file.exists():
-            continue
-
-        recording = read_intan(info_file, stream_id='0')
-        ir = IntanRecording(folder=subfolder, recording=recording)
-        _ = ir.n_channels
-        _ = ir.n_samples
-        yield ir
+    @staticmethod
+    def from_root(root: Path) -> Iterator[IntanRecording]:
+        for info_file in tqdm(list(root.glob('**/info.rhd')), desc='Loading recordings', leave=False):
+            recording = read_intan(info_file, stream_id='0')
+            ir = IntanRecording(folder=info_file.parent, recording=recording)
+            _ = ir.n_channels
+            _ = ir.n_samples
+            yield ir
 
 
 def concatenate(root: Path):
@@ -109,10 +107,13 @@ def concatenate(root: Path):
     chunksize = 300000
     max_workers = min(32, (os.cpu_count() or 1) + 4)
 
-    recordings = list(get_recordings(root))
+    recordings = list(IntanRecording.from_root(root))
     n_samples = [r.n_samples for r in recordings]
     n_channels = {r.n_channels for r in recordings}
-    assert len(n_channels) == 1  # Every recording has the same number of channels
+    if len(n_channels) != 1:
+        ch = ', '.join(str(i) for i in n_channels)
+        msg = f"Expected all recordings to have the same number of channels, got {ch}"
+        raise ValueError(msg)
 
     with (root / 'concatenated.csv').open('w+', newline='') as summary:
         csvfile = csv.writer(summary)
@@ -124,7 +125,7 @@ def concatenate(root: Path):
     memmapped_output = np.memmap(str(binary_file), dtype=np.int16, mode='w+', shape=(n_total, n_channels.pop()))
     subfolder_start_idx = 0
 
-    for r in (pbar0 := tqdm(recordings)):
+    for r in (pbar0 := tqdm(recordings, desc='Writing recordings')):
         pbar0.set_postfix(dict(subfolder=r.folder.parts[-1]))
         indices = get_chunk_indices(r.recording, chunksize=chunksize)
 
@@ -135,7 +136,7 @@ def concatenate(root: Path):
             del t
 
         n_chunks = len(indices)
-        pbar1 = tqdm(total=n_chunks)
+        pbar1 = tqdm(total=n_chunks, desc=f'Writing chunks for {r.folder}', leave=False)
 
         with ThreadPoolExecutor(max_workers=max_workers) as exe:
             _futures = [exe.submit(copy_chunk, memmapped_output, i, j, k) for i, j, k in indices]
