@@ -23,7 +23,7 @@ from kilosort.parameters import DEFAULT_SETTINGS
 def run_kilosort(settings, probe=None, probe_name=None, filename=None,
                  data_dir=None, file_object=None, results_dir=None,
                  data_dtype=None, do_CAR=True, invert_sign=False, device=None,
-                 progress_bar=None, save_extra_vars=False):
+                 progress_bar=None, save_extra_vars=False, init_logging=True):
     """Run full spike sorting pipeline on specified data.
     
     Parameters
@@ -78,6 +78,8 @@ def run_kilosort(settings, probe=None, probe_name=None, filename=None,
         not need to specify this.
     save_extra_vars : bool; default=False.
         If True, save tF and Wall to disk after sorting.
+    init_logging : bool; default=True
+        Initialize logging.
     
     Raises
     ------
@@ -115,7 +117,8 @@ def run_kilosort(settings, probe=None, probe_name=None, filename=None,
     # NOTE: This modifies settings in-place
     filename, data_dir, results_dir, probe = \
         set_files(settings, filename, probe, probe_name, data_dir, results_dir)
-    setup_logger(results_dir)
+    if init_logging:
+        setup_logger(results_dir)
     logger.info(f"Sorting {filename}")
     logger.info('-'*40)
 

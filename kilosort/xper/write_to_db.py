@@ -9,13 +9,6 @@ import mysql.connector
 import numpy as np
 import pandas as pd
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format= '[%(asctime)s] %(levelname)s - %(message)s',
-    datefmt='%H:%M:%S',
-)
-
-logging.getLogger().setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -80,7 +73,17 @@ def load_trials(curs, recordings: pd.DataFrame):
     return trials
 
 
-def write_to_db(root: Path, db):
+def write_to_db(root: Path, db=None):
+    if db is None:
+        db = mysql.connector.connect(
+            user='xper_rw',
+            password='up2nite',
+            host='172.30.6.54',
+            database='SpikeData',
+            client_flags=[mysql.connector.constants.ClientFlag.LOCAL_FILES],
+            allow_local_infile=True,
+        )
+
     logger.info("Loading kilosort data")
     results_dir = root / 'kilosort4'
 
@@ -176,21 +179,3 @@ def write_clusters(curs, recordings, camps, contam_pct, chan_best, clu_labels) -
     curs.executemany(q, data)
     logger.info("Wrote %s clusters", len(data))
     return session_id
-
-
-def main():
-    db = mysql.connector.connect(
-        user='xper_rw',
-        password='up2nite',
-        host='172.30.6.54',
-        database='SpikeData',
-        client_flags=[mysql.connector.constants.ClientFlag.LOCAL_FILES],
-        allow_local_infile=True,
-    )
-    root = parse_args()
-    write_to_db(root, db)
-
-
-if __name__ == '__main__':
-    main()
-

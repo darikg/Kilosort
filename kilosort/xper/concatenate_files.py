@@ -20,12 +20,6 @@ from probeinterface import generate_linear_probe, ProbeGroup, write_prb
 from spikeinterface.extractors import read_intan
 from tqdm import tqdm
 
-basicConfig(
-    level=logging.DEBUG,
-    format= '[%(asctime)s] %(levelname)s - %(message)s',
-    datefmt='%H:%M:%S',
-)
-
 logging.getLogger().setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -45,13 +39,6 @@ def write_probe_file(probe_file: Path):
     probegroup = ProbeGroup()
     probegroup.add_probe(probe)
     write_prb(str(probe_file), probegroup)
-
-
-def parse_args() -> Path:
-    parser = ArgumentParser()
-    parser.add_argument('folder', type=Path)
-    args = parser.parse_args()
-    return args.folder
 
 
 def get_subfolders(root: Path) -> list[Path]:
@@ -149,12 +136,3 @@ def concatenate(root: Path):
 
     del memmapped_output
     write_probe_file(root / 'probe.prb')
-
-
-def main():
-    root = parse_args()
-    concatenate(root)
-
-
-if __name__ == '__main__':
-    main()
